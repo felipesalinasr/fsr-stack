@@ -60,9 +60,7 @@ Before touching any Instantly endpoint, resolve which credential path to use. Th
    - *No* → continue to step 2.
 
 2. *Check for Composio MCP.* Is the `mcp__composio__COMPOSIO_SEARCH_TOOLS` tool available in this session?
-   - *No* → STOP. Tell the user:
-     > "I don't have an Instantly API key and Composio.dev isn't connected either. Pick one to unblock me: (a) add `INSTANTLY_API_KEY` to the environment — grab it from Instantly dashboard > Settings > Integrations > API, or (b) install Composio.dev MCP (https://docs.composio.dev/) and connect the Instantly toolkit. I'll take either."
-     Then wait for the user's choice before continuing.
+   - *No* → jump to step 5 (last-resort chat paste).
    - *Yes* → continue to step 3.
 
 3. *Check if the Instantly toolkit is already connected in Composio.* Call `mcp__composio__COMPOSIO_SEARCH_TOOLS` with `use_case: "create a cold email campaign in Instantly and bulk-add leads"` and `session: { generate_id: true }`. Save the `session_id`. Inspect the response for the `instantly` toolkit connection status.
@@ -70,13 +68,22 @@ Before touching any Instantly endpoint, resolve which credential path to use. Th
    - *Not connected* / *401 on test call* → continue to step 4.
 
 4. *Prompt the user to connect Instantly via Composio.* Call `mcp__composio__COMPOSIO_MANAGE_CONNECTIONS` with `toolkits: ["instantly"]` (add `reinitiate_all: true` if the connection exists but is stale). Take the `redirect_url` from the response and surface it to the user as a clickable link:
-   > "Composio is installed but the Instantly toolkit isn't connected. Click here to authorize it: `{redirect_url}`. I'll wait and pick up automatically once you're done."
-   Then poll `mcp__composio__COMPOSIO_WAIT_FOR_CONNECTIONS` until the connection goes Active. Once Active, proceed down the *Composio Path*.
+   > "Composio is installed but the Instantly toolkit isn't connected. Click here to authorize it: `{redirect_url}`. I'll wait and pick up automatically once you're done. If you'd rather not use Composio, tell me and I'll take the API key directly in chat as a last resort."
+   Then poll `mcp__composio__COMPOSIO_WAIT_FOR_CONNECTIONS` until the connection goes Active. Once Active, proceed down the *Composio Path*. If the user explicitly declines Composio, jump to step 5.
+
+5. *Last resort — accept the API key in chat.* Only reach this step when no env var is set AND (Composio is unavailable OR the user refused Composio). Ask the user:
+   > "Both automated paths are off the table. As a last resort, paste your Instantly v2 API key here and I'll use it just for this session. Two things to know: (1) the key will live in the chat transcript for this conversation — rotate it at https://app.instantly.ai/app/settings/integrations/api-keys when we're done if you care about that, (2) I won't write it to disk or any env file. Paste it now or tell me to stop."
+   Once pasted:
+   - Hold the key in memory only for the lifetime of this session. Substitute it wherever `{API_KEY}` appears in the Direct Path `curl` calls.
+   - Do NOT write the key to `.env`, `mcp-servers.json`, `.astronaut-state/`, or any file on disk.
+   - Do NOT echo the key back to the user in any response — refer to it as `{API_KEY}` or `[redacted]`.
+   - If the user refuses, STOP and tell them exactly what's missing with no further retries until they come back with a credential.
 
 *Rules:*
 
-- NEVER fall back silently. If neither credential path is available, tell the user exactly what's missing and what their options are.
-- NEVER ask the user to paste an API key into chat — point them to the env var or the Composio flow.
+- NEVER fall back silently. If no credential path is live, tell the user exactly what's missing and what their options are.
+- Env var and Composio are preferred over chat-paste. Chat-paste is LAST RESORT only — never offer it in step 2 or 3 unless Composio is actually unreachable.
+- When the user pastes a key, treat it as ephemeral session-only credential. No disk writes. No re-echoing in responses.
 - Cache the resolution for the duration of the session. Don't re-check on every step.
 
 ## The Workflow
