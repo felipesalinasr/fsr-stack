@@ -26,7 +26,9 @@ One-shot campaign creation against the Instantly v2 REST API. Always create the 
 
 ## Prerequisites
 
-- `INSTANTLY_API_KEY` env var set (see `../SETUP.md` for how to retrieve it from the Instantly dashboard: Settings > Integrations > API)
+- *One of these two credential paths* (resolved automatically at runtime — see "Credential Resolution" below):
+  - *Direct:* `INSTANTLY_API_KEY` env var set (see `../SETUP.md` for how to retrieve it from the Instantly dashboard: Settings > Integrations > API), OR
+  - *Composio:* Composio.dev MCP installed with the `instantly` toolkit connected
 - Paid Instantly plan (free tier does not expose v2 API)
 - Email sequence copy ready (output of `cold-email-sequence` skill, or supplied by user)
 - Lead data with verified emails (output of `apollo-enrichment` skill, or CSV)
@@ -46,6 +48,36 @@ One-shot campaign creation against the Instantly v2 REST API. Always create the 
 - Auth: `Authorization: Bearer {API_KEY}`
 - Content-Type: `application/json`
 - Use v2 ONLY. v1 returns `ERR_AUTH_FAILED` with v2 keys.
+
+## Credential Resolution (Run This BEFORE Step 1)
+
+Before touching any Instantly endpoint, resolve which credential path to use. This is a hard gate — do not proceed to Step 1 until one of these paths is live.
+
+*Decision tree:*
+
+1. *Check for direct API key.* Is `INSTANTLY_API_KEY` set in the environment?
+   - *Yes* → use the *Direct Path*. Jump to "The Workflow" below (Step 1).
+   - *No* → continue to step 2.
+
+2. *Check for Composio MCP.* Is the `mcp__composio__COMPOSIO_SEARCH_TOOLS` tool available in this session?
+   - *No* → STOP. Tell the user:
+     > "I don't have an Instantly API key and Composio.dev isn't connected either. Pick one to unblock me: (a) add `INSTANTLY_API_KEY` to the environment — grab it from Instantly dashboard > Settings > Integrations > API, or (b) install Composio.dev MCP (https://docs.composio.dev/) and connect the Instantly toolkit. I'll take either."
+     Then wait for the user's choice before continuing.
+   - *Yes* → continue to step 3.
+
+3. *Check if the Instantly toolkit is already connected in Composio.* Call `mcp__composio__COMPOSIO_SEARCH_TOOLS` with `use_case: "create a cold email campaign in Instantly and bulk-add leads"` and `session: { generate_id: true }`. Save the `session_id`. Inspect the response for the `instantly` toolkit connection status.
+   - *Active* → use the *Composio Path*. Jump to "Composio Path (Alternative to Direct API Key)" below.
+   - *Not connected* / *401 on test call* → continue to step 4.
+
+4. *Prompt the user to connect Instantly via Composio.* Call `mcp__composio__COMPOSIO_MANAGE_CONNECTIONS` with `toolkits: ["instantly"]` (add `reinitiate_all: true` if the connection exists but is stale). Take the `redirect_url` from the response and surface it to the user as a clickable link:
+   > "Composio is installed but the Instantly toolkit isn't connected. Click here to authorize it: `{redirect_url}`. I'll wait and pick up automatically once you're done."
+   Then poll `mcp__composio__COMPOSIO_WAIT_FOR_CONNECTIONS` until the connection goes Active. Once Active, proceed down the *Composio Path*.
+
+*Rules:*
+
+- NEVER fall back silently. If neither credential path is available, tell the user exactly what's missing and what their options are.
+- NEVER ask the user to paste an API key into chat — point them to the env var or the Composio flow.
+- Cache the resolution for the duration of the session. Don't re-check on every step.
 
 ## The Workflow
 
@@ -189,20 +221,13 @@ POST /api/v2/campaigns/{id}/activate
 - `email_gap`: `5` — 5 min between sends
 - `random_wait_max`: `10` — looks human
 
-## Composio Fallback (Optional Path)
+## Composio Path (Alternative to Direct API Key)
 
-If `INSTANTLY_API_KEY` isn't set but Composio.dev MCP is connected with the Instantly toolkit, route through Composio. No env var needed — Composio holds the API credential server-side.
+When Credential Resolution routes you here, every step in "The Workflow" above still runs — you just execute each REST call via a Composio tool slug instead of `curl`. Composio holds the Instantly API credential server-side so no env var is needed on this side.
 
-*Detection:*
-- `mcp__composio__COMPOSIO_SEARCH_TOOLS` is available in the session
-- `INSTANTLY_API_KEY` env var is missing OR returns 401 on the first request
+*How to run a step:*
 
-*Fallback workflow:*
-
-1. Discover slugs: call `mcp__composio__COMPOSIO_SEARCH_TOOLS` with `use_case: "create a cold email campaign in Instantly with a multi-step sequence and bulk-add leads"` and `session: { generate_id: true }`. Save the `session_id`.
-2. If the `instantly` toolkit isn't connected (or shows Active but tool calls return 401), call `mcp__composio__COMPOSIO_MANAGE_CONNECTIONS` with `toolkits: ["instantly"]`. For a stale-key 401, also pass `reinitiate_all: true` to force re-auth.
-3. Surface the `redirect_url` as a clickable link, then poll `COMPOSIO_WAIT_FOR_CONNECTIONS` until Active.
-4. Substitute slugs in the workflow steps.
+Call `mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL` with the `session_id` from the discovery call, the matching slug, and the same JSON body you would have sent to the REST endpoint. Responses come back in the same shape Instantly returns over REST.
 
 *Tool slug equivalents:*
 
@@ -213,6 +238,8 @@ If `INSTANTLY_API_KEY` isn't set but Composio.dev MCP is connected with the Inst
 - `POST /api/v2/leads/add` -> `INSTANTLY_ADD_LEADS_BULK`
 - `POST /api/v2/campaigns/{id}/activate` -> `INSTANTLY_ACTIVATE_CAMPAIGN`
 - `GET /api/v2/campaigns/{id}/sending_status` -> `INSTANTLY_GET_CAMPAIGN_SENDING_STATUS`
+
+*Runtime 401 recovery:* If a Composio tool call returns 401 mid-workflow (token expired, key rotated), jump back to Credential Resolution step 4 — call `COMPOSIO_MANAGE_CONNECTIONS` with `toolkits: ["instantly"]` and `reinitiate_all: true`, surface the new `redirect_url`, wait for re-auth, then retry the failed step.
 
 *Identical gotchas:* Both the timezone enum quirk and the ampersand body bug live inside Instantly's API itself, not in the transport. Sanitize all `&` characters and use `America/Vancouver` for Pacific regardless of which path you call.
 
