@@ -1,0 +1,21 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for Astronaut bot workspace — excludes common placeholder strings and non-source paths to avoid false positives."
+
+regexes = [
+  '''your-.*-here''',
+  '''xoxb-your-bot-token''',
+  '''xapp-your-.*''',
+  '''\{API_KEY\}''',
+  '''pat-your-.*''',
+  '''apify_api_your.*''',
+]
+
+paths = [
+  '''node_modules/''',
+  '''\.git/''',
+  '''workspace/attachments/''',
+  '''workspace/\.playwright-mcp/''',
+]

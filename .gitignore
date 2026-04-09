@@ -1,0 +1,27 @@
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Local MCP config with real credentials
+mcp-servers.json
+
+# macOS
+.DS_Store
+
+# Output from skill runs
+output/
+*.log
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.bak
+*.tmp
+
+# Packaged bundles (output of package-skills.sh)
+*.zip
+
+# gitleaks local reports
+.gitleaks-report-*.json
