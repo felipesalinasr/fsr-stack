@@ -37,7 +37,7 @@ LinkedIn Post URL
 [1. Scraper]   -- Apify extracts commenters or reactors (with full profiles)
      |
      v
-[2. Airtable]  -- Store leads in a structured table with the full schema
+[2. Store]     -- Save leads to Airtable, OR Google Sheets (the -gsheets variant)
      |
      v
 [3. Apollo]    -- Bulk match to find verified emails + enrich company/title/location
@@ -72,6 +72,17 @@ Six individual skills (the pipeline steps, usable standalone):
 ## Quick Start
 
 See SETUP.md for full installation steps.
+
+### Install in Houston (no terminal needed)
+
+Houston is a desktop app that runs these skills for you — no command line required.
+
+1. In Houston, open your agent's Skills.
+2. Add the skills from this repo: download or clone the repo, then drop each folder from `skills/` into your agent's skills (or just ask your Houston agent to "install the skills from github.com/felipesalinasr/fsr-stack").
+3. Connect the apps the pipeline needs (Apify, Apollo, Instantly, and Airtable or Google Sheets) from the Integrations tab. Houston brokers these through Composio, so it's one connect flow per app — no API keys to copy.
+4. Just tell your agent what you want, e.g. `run the linkedin comment pipeline on this post: [your LinkedIn post URL]` (add "use google sheets" for the spreadsheet variant).
+
+### Install in Claude Code
 
 Fast path:
 1. Install Claude Code
