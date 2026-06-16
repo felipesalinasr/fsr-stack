@@ -54,9 +54,10 @@ Paused campaign, ready for human review
 
 ## What's Inside
 
-Two orchestrator skills (end-to-end pipelines):
+Three orchestrator skills (end-to-end pipelines):
 
-- `linkedin-comment-to-outreach` -- For people who COMMENTED on a post. Higher intent (commenting takes effort), lower volume. Best for small, high-quality lists.
+- `linkedin-comment-to-outreach` -- For people who COMMENTED on a post. Higher intent (commenting takes effort), lower volume. Best for small, high-quality lists. Stores leads in Airtable.
+- `linkedin-comment-to-outreach-gsheets` -- Same commenter pipeline, but stores leads in **Google Sheets** instead of Airtable. Pick this if you'd rather work in a spreadsheet than set up an Airtable base.
 - `linkedin-reaction-to-outreach` -- For people who REACTED to a post. Higher volume (5-10x more reactors than commenters) and richer profile data (experience, education, skills pulled directly in the scrape). Best for broader audience plays.
 
 Six individual skills (the pipeline steps, usable standalone):

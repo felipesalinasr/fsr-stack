@@ -26,6 +26,7 @@ End-to-end orchestrator that takes a single LinkedIn post URL and produces a ful
 
 ## Prerequisites
 
+- Always check if a tool is available in Composio first
 - **MCP tools:** Apify, Airtable, Apollo.io
 - **API key:** `INSTANTLY_API_KEY` environment variable (see `../SETUP.md`)
 - **Airtable base:** Existing base ID (user provides or we discover via `list_bases`)
@@ -76,7 +77,7 @@ Campaign ready for review (paused)
 1. List Airtable bases, confirm with user
 2. Create table: "LinkedIn Commenters - [Author Name]"
 3. Include all fields: scrape data + enrichment fields + outreach tracking
-4. Batch load via parallel agents (4 agents for speed)
+4. Batch load via parallel agents (4 agents for speed or more if possible)
 5. Verify load count
 
 **Checkpoint:** Report: "Loaded X records into Airtable. Starting Apollo enrichment."
