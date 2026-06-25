@@ -69,6 +69,16 @@ Six individual skills (the pipeline steps, usable standalone):
 - `cold-email-sequence` -- Co-writes a 3-email sequence using the James Shields framework: personalized subject (not body), 3 sentences plus PS, irresistible offer, low-friction CTA. Interactive -- locks each email with you before moving to the next.
 - `instantly-campaign` -- Creates the campaign via Instantly REST API v2, handles the known bugs (timezone enum restrictions, the ampersand body-drop bug), loads up to 1000 leads per call, attaches all sending accounts. Always leaves the campaign paused for human review.
 
+## Also Inside: Market Pulse (English and Spanish)
+
+`market-pulse`: live lodging market intelligence for any city, delivered as a branded, multi tab Google Sheet plus a one screen brief. Built for hotels and short term rental hosts who want to understand and out position the Airbnb and OTA competition in their own market.
+
+It blends competing supply across Airbnb, Booking.com, Expedia and Hotels.com, Vrbo, and Hostelworld, then builds a seven tab command center: a comp set with price and occupancy heat maps, a day by day demand calendar, a voice of guest read, a rate parity tab with verify links and capture dates, revenue actions, and a researched demand drivers calendar. Every read ends in three concrete moves, not a dashboard.
+
+Fully bilingual, automatically. Ask in English and the whole deliverable comes back in English. Ask in Spanish (a "pulso de mercado") and it comes back in Spanish: tabs, labels, and all. The skill matches whatever language you write in. It needs a web data layer (Apify plus a no login Airbnb read source), Google Sheets, and a live web search tool connected.
+
+Invoke it with, for example: `give me a market pulse for Medellin for three nights in late July`, or `haz un pulso de mercado de Medellin para fin de julio`.
+
 ## Quick Start
 
 See SETUP.md for full installation steps.
