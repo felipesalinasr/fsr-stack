@@ -60,10 +60,12 @@ Three orchestrator skills (end-to-end pipelines):
 - `linkedin-comment-to-outreach-gsheets` -- Same commenter pipeline, but stores leads in **Google Sheets** instead of Airtable. Pick this if you'd rather work in a spreadsheet than set up an Airtable base.
 - `linkedin-reaction-to-outreach` -- For people who REACTED to a post. Higher volume (5-10x more reactors than commenters) and richer profile data (experience, education, skills pulled directly in the scrape). Best for broader audience plays.
 
-Six individual skills (the pipeline steps, usable standalone):
+Eight individual skills (the pipeline steps, usable standalone):
 
 - `linkedin-comment-scraper` -- Apify actor `harvestapi/linkedin-post-comments`. Extracts fullName, headline, profileUrl, company, comment text, reaction counts.
 - `linkedin-reaction-scraper` -- Apify actor `harvestapi/linkedin-post-reactions` with `profileScraperMode: "main"`. Returns full LinkedIn profiles: experience history, education, skills, certifications, location, connections count.
+- `xquik-x-tweet-scraper`: Bounded X searches, timelines, lists, posts, and conversations through the Xquik Apify Actor.
+- `xquik-x-follower-scraper`: Bounded X audience relations, public profile filters, deduplication, and overlap through the Xquik Apify Actor.
 - `airtable-lead-loader` -- Creates a new table with the full pipeline schema (lead tracking + enrichment + outreach status). Batch-loads records using parallel agents to work around Airtable's 1-record-per-call limit.
 - `apollo-enrichment` -- Uses Apollo.io `apollo_people_bulk_match` (batches of 10) to find verified emails. Expected match rate: 50-70%. Updates Airtable, creates Apollo contacts under a named label for CRM workflows.
 - `cold-email-sequence` -- Co-writes a 3-email sequence using the James Shields framework: personalized subject (not body), 3 sentences plus PS, irresistible offer, low-friction CTA. Interactive -- locks each email with you before moving to the next.

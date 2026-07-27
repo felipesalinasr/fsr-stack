@@ -78,6 +78,7 @@ copy_if_exists "$WORKSPACE_ROOT/README.md"                          "$STAGE_DIR/
 # --- SCAN 1: gitleaks ---
 echo ""
 echo "[3/6] SCAN 1 - gitleaks..."
+GITLEAKS_RAN=0
 if command -v gitleaks >/dev/null 2>&1; then
     if ! gitleaks detect --source "$STAGE_DIR" --no-git --verbose --redact; then
         echo ""
@@ -85,6 +86,7 @@ if command -v gitleaks >/dev/null 2>&1; then
         echo "       Review the output above, remove the offending values, and re-run." >&2
         exit 1
     fi
+    GITLEAKS_RAN=1
     echo "       gitleaks: clean"
 else
     echo "       WARNING: gitleaks not found."
@@ -193,4 +195,8 @@ echo "  Files  : $FILE_COUNT"
 echo "  SHA256 : $SHA256"
 echo "============================================================"
 echo ""
-echo "Safe to share. Both gitleaks and custom pattern scans passed."
+if [ "$GITLEAKS_RAN" -eq 1 ]; then
+    echo "Safe to share. Both gitleaks and custom pattern scans passed."
+else
+    echo "Package created. Custom scan passed; gitleaks was not installed."
+fi
